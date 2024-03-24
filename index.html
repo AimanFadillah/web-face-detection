@@ -5,38 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-
-
-        #myCanvas {
+        canvas {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
         }
     </style>
 </head>
 <body>
-    <div style="position: relative;display: flex;justify-content: center;">
-        <img src="/images/test.jpeg" width="500px" height="500px" alt="gambar" id="myImage"  >
-        <canvas id="myCanvas" width="500px" height="500px" ></canvas>
-    </div>
+    <video id="video" width="720" height="560" autoplay muted></video>
+</body>
+  <script src="./dist/face-api.js" ></script>
 
-    <script src="./dist/face-api.js" ></script>
-    <script type="module" >
-        const modelUrl = "/models"
+<script>
+    const video = document.getElementById('video')
 
-        await faceapi.loadSsdMobilenetv1Model(modelUrl)
-        await faceapi.loadFaceLandmarkModel(modelUrl)
-        await faceapi.loadFaceRecognitionModel(modelUrl)
+    Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+      faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+      faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+      faceapi.nets.faceExpressionNet.loadFromUri('/models')
+    ]).then(startVideo)
 
-        const input = document.getElementById('myImage')
-        const canvas = document.getElementById('myCanvas')
-        let fullFaceDescriptions = await faceapi.detectSingleFace(input).withFaceLandmarks().withFaceDescriptor()
-        const displaySize = { width: input.width, height: input.height }
-        const resizedDetections = faceapi.resizeResults(fullFaceDescriptions, displaySize)
+    function startVideo() {
+      navigator.getUserMedia(
+        { video: {} },
+        stream => video.srcObject = stream,
+        err => console.error(err)
+      )
+    }
+
+    video.addEventListener('play', () => {
+      const canvas = faceapi.createCanvasFromMedia(video)
+      document.body.append(canvas)
+      const displaySize = { width: video.width, height: video.height }
+      faceapi.matchDimensions(canvas, displaySize)
+      setInterval(async () => {
+        const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
+        const resizedDetections = faceapi.resizeResults(detections, displaySize)
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
         faceapi.draw.drawDetections(canvas, resizedDetections)
         faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
-    </script>
-</body>
+        faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
+      }, 100)
+    })
+</script>
 </html>
