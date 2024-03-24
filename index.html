@@ -4,11 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+
+
+
+        #myCanvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
 </head>
 <body>
-    <div style="position: relative;">
-        <img src="/images/Screenshot (580).png" width="800px" height="500px" alt="gambar" id="myImage"  >
-        <canvas id="myCanvas" width="800px" height="500px" style="position: absolute; top: 0px; left: 0px;" ></canvas>
+    <div style="position: relative;display: flex;justify-content: center;">
+        <img src="/images/test.jpeg" width="500px" height="500px" alt="gambar" id="myImage"  >
+        <canvas id="myCanvas" width="500px" height="500px" ></canvas>
     </div>
 
     <script src="./dist/face-api.js" ></script>
@@ -21,13 +32,11 @@
 
         const input = document.getElementById('myImage')
         const canvas = document.getElementById('myCanvas')
-        let fullFaceDescriptions = await faceapi.detectAllFaces(input).withFaceLandmarks().withFaceDescriptors()
+        let fullFaceDescriptions = await faceapi.detectSingleFace(input).withFaceLandmarks().withFaceDescriptor()
         const displaySize = { width: input.width, height: input.height }
         const resizedDetections = faceapi.resizeResults(fullFaceDescriptions, displaySize)
         faceapi.draw.drawDetections(canvas, resizedDetections)
-        // faceapi.matchDimensions(canvas, displaySize)
-        // fullFaceDescriptions = faceapi.resizeResults(fullFaceDescriptions,{width:input.width,height:input.height})
-        // faceapi.draw.drawDetections(canvas, fullFaceDescriptions)
+        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
     </script>
 </body>
 </html>
