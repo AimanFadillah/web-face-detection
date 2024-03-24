@@ -21,6 +21,7 @@
     </style>
 </head>
 <body>
+    <h4>Sedang mengambil resource dan mohon untuk bersabar menggunakan website ini</h4>
     <video id="video" width="720" height="560" autoplay muted></video>
 </body>
   <script src="./dist/face-api.js" ></script>
@@ -36,11 +37,13 @@
     ]).then(startVideo)
 
     function startVideo() {
+      const h1 = document.querySelector("h4")
       navigator.getUserMedia(
         { video: {} },
         stream => video.srcObject = stream,
         err => console.error(err)
       )
+      document.body.removeChild(h1)
     }
 
     video.addEventListener('play', () => {
