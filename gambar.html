@@ -32,11 +32,28 @@
 
         const input = document.getElementById('myImage')
         const canvas = document.getElementById('myCanvas')
+
+        const gambarA = await gambarAiman() 
+        const faceMatcher = new faceapi.FaceMatcher(gambarA, 0.6) // ngambil gambar aiman
+
         let fullFaceDescriptions = await faceapi.detectSingleFace(input).withFaceLandmarks().withFaceDescriptor()
         const displaySize = { width: input.width, height: input.height }
         const resizedDetections = faceapi.resizeResults(fullFaceDescriptions, displaySize)
-        faceapi.draw.drawDetections(canvas, resizedDetections)
-        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
+        const result = faceMatcher.findBestMatch(resizedDetections.descriptor)
+        const box = resizedDetections.detection.box
+        const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
+        drawBox.draw(canvas)
+        // faceapi.draw.drawDetections(canvas, resizedDetections)
+        // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
+
+        async function gambarAiman () {
+            const img = await faceapi.fetchImage("/images/test.jpeg");
+            const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
+            return [new faceapi.LabeledFaceDescriptors(
+                "Aiman",
+                [detections.descriptor],
+            )]
+        }
     </script>
 </body>
 </html>

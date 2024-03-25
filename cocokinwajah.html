@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Face-Detection</title>
+    <title>Document</title>
     <style>
         #body {
             margin: 0;
@@ -31,20 +31,24 @@
 <script type="module" >
   const video = document.getElementById('video')
   const modelUrl = "/models"
-
-  await faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+  
   await faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
   await faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
-  await faceapi.nets.faceExpressionNet.loadFromUri('/models')
+  await faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+  await faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
+
+  const gambarA = await gambarAiman() 
+  const faceMatcher = new faceapi.FaceMatcher(gambarA, 0.6)
+
 
   function startVideo() {
-    const text = document.querySelector("h3")
+    const h1 = document.querySelector("h3")
     navigator.getUserMedia(
       { video: {} },
       stream => video.srcObject = stream,
       err => console.error(err)
     )
-    document.body.removeChild(text)
+    document.body.removeChild(h1)
   }
 
   startVideo()
@@ -55,14 +59,27 @@
     const displaySize = { width: video.width, height: video.height }
     faceapi.matchDimensions(canvas, displaySize)
     setInterval(async () => {
-      const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
+      const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor()
       const resizedDetections = faceapi.resizeResults(detections, displaySize)
+      const result = faceMatcher.findBestMatch(resizedDetections.descriptor)
+      const box = resizedDetections.detection.box
       canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
-      faceapi.draw.drawDetections(canvas, resizedDetections)
-      faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
-      faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
+      const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
+      drawBox.draw(canvas)
+      // faceapi.draw.drawDetections(canvas, resizedDetections)
+      // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
+      // faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
     }, 100)
   })
-  
+
+  async function gambarAiman () {
+    const img = await faceapi.fetchImage("/images/test.jpeg");
+    const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
+    return [new faceapi.LabeledFaceDescriptors(
+      "Aiman",
+      [detections.descriptor],
+    )]
+  }
+
 </script>
 </html>
